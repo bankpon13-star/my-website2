@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>บวกเลขแสนสนุก - By Jamasu</title>
+    <style>
+        body { font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        h1 { color: #333; font-size: 24px; }
+        #math-display { font-size: 50px; font-weight: bold; margin: 20px 0; color: #2c3e50; }
+        input { padding: 10px; font-size: 20px; width: 80%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        button { background-color: #2ecc71; color: white; border: none; padding: 10px 25px; font-size: 18px; border-radius: 8px; cursor: pointer; }
+        button:disabled { background-color: #bdc3c7; }
+        .credit { margin-top: 20px; font-size: 12px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎮 บวกเลขแสนสนุก</h1>
+        <div id="q-count">ข้อที่ 1/10</div>
+        <div id="math-display"></div>
+        <input type="number" id="answer-input" placeholder="คำตอบ">
+        <br>
+        <button id="submit-btn" onclick="checkAns()">ตอบ!</button>
+        <div class="credit">🚀 Created By Jamasu</div>
+    </div>
+
+    <script>
+        let score = 0, currentQ = 1, a, b;
+        const mathDisp = document.getElementById('math-display');
+        const qDisp = document.getElementById('q-count');
+        const input = document.getElementById('answer-input');
+        const btn = document.getElementById('submit-btn');
+
+        function nextQ() {
+            if (currentQ > 10) {
+                mathDisp.innerHTML = `จบเกม!<br>${score}/10`;
+                mathDisp.style.fontSize = "30px";
+                input.style.display = "none";
+                btn.disabled = true;
+                return;
+            }
+            a = Math.floor(Math.random() * 20) + 1;
+            b = Math.floor(Math.random() * 20) + 1;
+            mathDisp.innerText = `${a} + ${b}`;
+            qDisp.innerText = `ข้อที่ ${currentQ}/10`;
+        }
+
+        function checkAns() {
+            if (parseInt(input.value) === a + b) {
+                score++;
+            }
+            currentQ++;
+            input.value = "";
+            nextQ();
+        }
+
+        // กด Enter เพื่อตอบได้
+        input.addEventListener("keypress", (e) => { if (e.key === "Enter") checkAns(); });
+        
+        nextQ();
+    </script>
+</body>
+</html>
