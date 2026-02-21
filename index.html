@@ -1,64 +1,247 @@
-<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>บวกเลขแสนสนุก - By Jamasu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math Master - Jamasu Edition</title>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
     <style>
-        body { font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 350px; }
-        h1 { color: #333; font-size: 24px; }
-        #math-display { font-size: 50px; font-weight: bold; margin: 20px 0; color: #2c3e50; }
-        input { padding: 10px; font-size: 20px; width: 80%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-        button { background-color: #2ecc71; color: white; border: none; padding: 10px 25px; font-size: 18px; border-radius: 8px; cursor: pointer; }
-        button:disabled { background-color: #bdc3c7; }
-        .credit { margin-top: 20px; font-size: 12px; color: #7f8c8d; }
+        :root { 
+            --primary: #6c5ce7; --secondary: #a29bfe; --accent: #fd79a8; 
+            --success: #00b894; --error: #d63031; --bg: #f0f2f5;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Itim', cursive; background: var(--bg);
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; transition: 0.3s;
+        }
+
+        body.correct { background: var(--success); }
+        body.wrong { background: var(--error); }
+
+        .game-card { 
+            background: white; padding: 25px; border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; 
+            width: 90%; max-width: 450px; position: relative; overflow: hidden;
+        }
+
+        /* Timer Bar */
+        .timer-container { width: 100%; height: 8px; background: #eee; position: absolute; top: 0; left: 0; }
+        #timer-bar { width: 100%; height: 100%; background: var(--error); transition: width 0.1s linear; }
+
+        h1 { color: var(--primary); margin-top: 10px; }
+        select, input { 
+            width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd;
+            border-radius: 12px; font-family: 'Itim'; font-size: 1.1rem;
+        }
+
+        .math-box { font-size: 3rem; margin: 20px 0; color: #2d3436; font-weight: bold; min-height: 80px; }
+        
+        .btn { 
+            background: var(--primary); color: white; border: none; padding: 15px;
+            border-radius: 15px; font-size: 1.2rem; cursor: pointer; width: 100%;
+            font-family: 'Itim'; box-shadow: 0 4px #4834d4;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px #4834d4; }
+
+        #game-screen, #result-screen { display: none; }
+        .rank-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .rank-table td, th { padding: 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>🎮 บวกเลขแสนสนุก</h1>
-        <div id="q-count">ข้อที่ 1/10</div>
-        <div id="math-display"></div>
-        <input type="number" id="answer-input" placeholder="คำตอบ">
-        <br>
-        <button id="submit-btn" onclick="checkAns()">ตอบ!</button>
-        <div class="credit">🚀 Created By Jamasu</div>
+
+<div class="game-card">
+    <div class="timer-container"><div id="timer-bar"></div></div>
+
+    <!-- หน้าแรก: เลือกสเปคผู้เล่น -->
+    <div id="start-screen">
+        <h1>🚀 Math Master</h1>
+        <input type="text" id="player-name" placeholder="ชื่อผู้เล่น" maxlength="10">
+        <input type="number" id="player-age" placeholder="อายุ" min="1">
+        <select id="grade-level">
+            <option value="p13">ประถมตอนต้น (ป.1 - ป.3)</option>
+            <option value="p46">ประถมตอนปลาย (ป.4 - ป.6)</option>
+            <option value="m13">มัธยมตอนต้น (ม.1 - ม.3)</option>
+            <option value="m46">มัธยมตอนปลาย (ม.4 - ม.6)</option>
+            <option value="expert">ระดับตำนาน (Hardcore)</option>
+        </select>
+        <button class="btn" onclick="startGame()" style="margin-top:15px;">เริ่มท้าทาย (5 วินาที!)</button>
     </div>
 
-    <script>
-        let score = 0, currentQ = 1, a, b;
-        const mathDisp = document.getElementById('math-display');
-        const qDisp = document.getElementById('q-count');
-        const input = document.getElementById('answer-input');
-        const btn = document.getElementById('submit-btn');
+    <!-- หน้าเล่นเกม -->
+    <div id="game-screen">
+        <div style="display:flex; justify-content:space-between; font-size:0.9rem; color:#636e72;">
+            <span id="p-info"></span>
+            <span id="q-number"></span>
+        </div>
+        <div class="math-box" id="math-question">...</div>
+        <input type="number" id="user-input" inputmode="numeric" placeholder="คำตอบ">
+        <button class="btn" onclick="checkAnswer()">ตกลง</button>
+    </div>
 
-        function nextQ() {
-            if (currentQ > 10) {
-                mathDisp.innerHTML = `จบเกม!<br>${score}/10`;
-                mathDisp.style.fontSize = "30px";
-                input.style.display = "none";
-                btn.disabled = true;
-                return;
-            }
-            a = Math.floor(Math.random() * 20) + 1;
-            b = Math.floor(Math.random() * 20) + 1;
-            mathDisp.innerText = `${a} + ${b}`;
-            qDisp.innerText = `ข้อที่ ${currentQ}/10`;
-        }
+    <!-- หน้าสรุปผล -->
+    <div id="result-screen">
+        <h2 id="final-msg">จบเกม!</h2>
+        <h1 id="final-score" style="font-size:3rem; margin:10px 0;">0</h1>
+        <p id="level-reached"></p>
+        <table class="rank-table">
+            <thead><tr><th>ที่</th><th>ชื่อ</th><th>ระดับ</th><th>คะแนน</th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+        <button class="btn" onclick="location.reload()" style="margin-top:15px; background:var(--accent); box-shadow:0 4px #ad1457;">เล่นใหม่</button>
+    </div>
+</div>
 
-        function checkAns() {
-            if (parseInt(input.value) === a + b) {
-                score++;
-            }
-            currentQ++;
-            input.value = "";
-            nextQ();
-        }
+<script>
+    let score = 0, currentQ = 1, ans = 0, playerName = "", timer, timeLeft;
+    const maxQ = 10;
 
-        // กด Enter เพื่อตอบได้
-        input.addEventListener("keypress", (e) => { if (e.key === "Enter") checkAns(); });
+    function startGame() {
+        playerName = document.getElementById('player-name').value.trim() || "นิรนาม";
+        let age = parseInt(document.getElementById('player-age').value) || 0;
+        let grade = document.getElementById('grade-level').value;
+
+        // ถ้าอายุ 18+ บังคับระดับ Expert อัตโนมัติ
+        if (age >= 18) grade = "expert";
+
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('p-info').innerText = `👤 ${playerName} (${grade.toUpperCase()})`;
         
-        nextQ();
-    </script>
+        createQuiz(grade);
+    }
+
+    function createQuiz(grade) {
+        if (currentQ > maxQ) { finishGame(); return; }
+        document.getElementById('q-number').innerText = `ข้อ ${currentQ}/${maxQ}`;
+        
+        let a, b, op, questText;
+        
+        // --- ระบบสุ่มโจทย์ตามระดับชั้น ---
+        switch(grade) {
+            case 'p13':
+                a = r(1, 20); b = r(1, 10);
+                op = Math.random() > 0.5 ? '+' : '-';
+                if(op === '-') a = a + b; // กันติดลบ
+                ans = eval(`${a}${op}${b}`);
+                questText = `${a} ${op} ${b}`;
+                break;
+            case 'p46':
+                a = r(10, 50); b = r(2, 12);
+                op = ['+','-','*'][r(0,2)];
+                if(op === '*') { a = r(2,12); b = r(2,12); }
+                ans = eval(`${a}${op}${b}`);
+                questText = `${a} ${op.replace('*','×')} ${b}`;
+                break;
+            case 'm13':
+                let mode = r(0,2);
+                if(mode === 0) { // ยกกำลัง
+                    a = r(2, 15); questText = `${a}²`; ans = a*a;
+                } else { // สมการ
+                    a = r(2, 10); b = r(1, 20);
+                    ans = r(1, 10); // คำตอบคือ x
+                    let result = a * ans + b;
+                    questText = `${a}x + ${b} = ${result} , x=?`;
+                }
+                break;
+            case 'm46':
+                let mMode = r(0,2);
+                if(mMode === 0) { // Root
+                    ans = r(5, 20); questText = `√${ans*ans}`;
+                } else {
+                    a = r(10, 99); b = r(10, 99);
+                    op = Math.random() > 0.5 ? '+' : '-';
+                    ans = eval(`${a}${op}${b}`);
+                    questText = `${a} ${op} ${b}`;
+                }
+                break;
+            case 'expert': // 18+ ระดับตำนาน
+                let exMode = r(0,2);
+                if(exMode === 0) { // เลข 3 ชุด
+                    a = r(10, 50); b = r(10, 50); let c = r(2, 5);
+                    ans = (a + b) * c; questText = `(${a}+${b}) × ${c}`;
+                } else { // คูณเลข 2 หลักโหดๆ
+                    a = r(13, 29); b = r(11, 19);
+                    ans = a * b; questText = `${a} × ${b}`;
+                }
+                break;
+        }
+
+        document.getElementById('math-question').innerText = questText;
+        document.getElementById('user-input').value = '';
+        document.getElementById('user-input').focus();
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        timeLeft = 5.0;
+        const bar = document.getElementById('timer-bar');
+        
+        timer = setInterval(() => {
+            timeLeft -= 0.1;
+            bar.style.width = (timeLeft / 5 * 100) + "%";
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                triggerFeedback('wrong');
+                nextStep();
+            }
+        }, 100);
+    }
+
+    function checkAnswer() {
+        clearInterval(timer);
+        let val = parseInt(document.getElementById('user-input').value);
+        if (val === ans) {
+            score++;
+            triggerFeedback('correct');
+        } else {
+            triggerFeedback('wrong');
+        }
+        nextStep();
+    }
+
+    function nextStep() {
+        currentQ++;
+        setTimeout(() => {
+            createQuiz(document.getElementById('grade-level').value);
+        }, 400);
+    }
+
+    function triggerFeedback(type) {
+        document.body.classList.add(type);
+        if (type === 'wrong' && navigator.vibrate) navigator.vibrate(200);
+        setTimeout(() => document.body.classList.remove(type), 300);
+    }
+
+    function finishGame() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = score;
+        saveRank(playerName, score, document.getElementById('grade-level').value);
+        showLeaderboard();
+    }
+
+    function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function saveRank(n, s, g) {
+        let list = JSON.parse(localStorage.getItem('MathProRank') || "[]");
+        list.push({ n, s, g, t: Date.now() });
+        list.sort((a,b) => b.s - a.s);
+        localStorage.setItem('MathProRank', JSON.stringify(list.slice(0, 5)));
+    }
+
+    function showLeaderboard() {
+        let list = JSON.parse(localStorage.getItem('MathProRank') || "[]");
+        document.getElementById('leaderboard-body').innerHTML = list.map((i, idx) => 
+            `<tr><td>${idx+1}</td><td>${i.n}</td><td>${i.g}</td><td>${i.s}</td></tr>`
+        ).join('');
+    }
+
+    document.getElementById('user-input').addEventListener('keypress', e => e.key === 'Enter' && checkAnswer());
+</script>
 </body>
 </html>
